@@ -66,9 +66,9 @@
           >
         <template slot-scope="scope">
           <!--              修改按钮-->
-          <el-button size="mini" alt="111" type="primary" icon="el-icon-edit" @click="showEditDialog(scope.row.id)">编辑</el-button>
+          <el-button size="mini" alt="111" type="primary" icon="el-icon-edit" @click="showEditDialog(scope.row)">编辑</el-button>
           <!--              删除按钮-->
-          <el-button size="mini" type="danger" icon="el-icon-delete"  @click="removeUserById(scope.row.id)">删除</el-button>
+          <el-button size="mini" type="danger" icon="el-icon-delete"  @click="removeRoleById(scope.row.id)">删除</el-button>
           <!--              分配角色按钮-->
           <el-tooltip  effect="dark" content="分配权限" placement="top" :enterable="false">
             <el-button size="mini" type="warning" icon="el-icon-setting" @click="showSetRightDialog(scope.row)">分配权限</el-button>
@@ -77,8 +77,9 @@
       </el-table-column>
     </el-table>
   </el-card>
+<!--    分配权限树形对话框-->
     <el-dialog
-        title="提示"
+        title="分配权限"
         :visible.sync="setRightDialogVisible"
         width="50%"
         >
@@ -97,7 +98,44 @@
     <el-button type="primary" @click="allotRights()">确 定</el-button>
   </span>
     </el-dialog>
-
+<!--    添加角色对话框-->
+    <el-dialog
+        title="添加角色"
+        :visible.sync="addRoleDialogVisible"
+        width="50%"
+        >
+      <el-form :model="addRoleForm" :rules="AddRolerules" ref="AddRoleruleForm" label-width="100px" >
+        <el-form-item label="角色名称" prop="roleName">
+          <el-input v-model="addRoleForm.roleName"></el-input>
+        </el-form-item>
+        <el-form-item label="角色描述" prop="roleDesc">
+          <el-input v-model="addRoleForm.roleDesc"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+    <el-button @click="addRoleDialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="addRoleDialog">确 定</el-button>
+  </span>
+    </el-dialog>
+    <!--    编辑角色对话框-->
+    <el-dialog
+        title="编辑角色"
+        :visible.sync="editRoleDialogVisible"
+        width="50%"
+        >
+      <el-form :model="addRoleForm" :rules="AddRolerules" ref="AddRoleruleForm" label-width="100px" >
+        <el-form-item label="角色名称" prop="roleName">
+          <el-input v-model="addRoleForm.roleName"></el-input>
+        </el-form-item>
+        <el-form-item label="角色描述" prop="roleDesc">
+          <el-input v-model="addRoleForm.roleDesc"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+    <el-button @click="editRoleDialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="editRoleDialog">确 定</el-button>
+  </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -107,18 +145,36 @@ export default {
     this.getRolesList()
   },
   data(){
-    return{
+    return {
+      AddRolerules: {
+        roleName: [
+          { required: true, message: '请输入角色名称', trigger: 'blur' },
+          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+        ],
+        roleDesc:[
+          { required: true, message: '请输入角色描述', trigger: 'blur' },
+          { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+        ]
+    },
       //树形数据默认选中的id
       defKeys:[],
       //所有权限的树形数据
       RightsList:[],
       //所有角色列表数据
       RolesList:[],
+      addRoleForm:{
+        roleName:'',
+        roleDesc:''
+      },
+
       //即将分配权限的角色id
       roleId: '',
       //控制分配权限对话框的显示与隐藏
       setRightDialogVisible:false,
-
+      //控制添加角色对话框的显示与隐藏
+      addRoleDialogVisible:false,
+      //控制编辑角色对话框的显示与隐藏
+      editRoleDialogVisible:false,
       treeProps:{
         children:'children',
         label:'authName'
@@ -126,6 +182,42 @@ export default {
     }
   },
   methods:{
+    async removeRoleById(id){
+      const confirmResult = await this.$confirm('此操作将永久删除该角色, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err)
+      if(confirmResult !== 'confirm'){
+        return this.$message.info('已取消删除')
+      }
+      const {data:res} = await this.$http.delete('http://127.0.0.1:8888/api/private/v1/roles/'+id)
+      if(res.meta.status != 200) return this.$message.error('删除角色失败')
+      this.$message.success('删除角色成功')
+      this.getRolesList()
+      this.editRoleDialogVisible = false
+    },
+    async editRoleDialog(){
+      const {data:res} = await this.$http.put(`http://127.0.0.1:8888/api/private/v1/roles/${this.roleId}`,this.addRoleForm)
+      if(res.meta.status != 200) return this.$message.error('编辑失败')
+      this.$message.success('编辑成功')
+      this.getRolesList()
+      this.editRoleDialogVisible = false
+    },
+    showEditDialog(role){
+      this.roleId = role.id
+      this.addRoleForm.roleName = role.roleName
+      this.addRoleForm.roleDesc = role.roleDesc
+      this.editRoleDialogVisible = true
+    },
+    //添加角色
+    async addRoleDialog(){
+     const {data:res} = await this.$http.post('http://127.0.0.1:8888/api/private/v1/roles',this.addRoleForm)
+      if(res.meta.status != 201) return this.$message.error('添加成功')
+      this.$message.success('添加成功')
+      this.addRoleDialogVisible = false
+      this.getRolesList()
+    },
     async getRolesList(){
       const {data:res} = await this.$http.get('http://127.0.0.1:8888/api/private/v1/roles')
       if(res.meta.status != 200) return this.$message.error('获取角色信息失败')
@@ -133,7 +225,9 @@ export default {
       console.log(res.data)
       // return this.$message.success('获取角色信息成功')
     },
+    //添加角色按钮点击事件
     addRole(){
+      this.addRoleDialogVisible = true
     },
     //根据id删除对应权限
     async removeRightbyid(role,rigthsid) {
@@ -181,9 +275,9 @@ export default {
           ...this.$refs.treeRef.
               getCheckedKeys(),
           ...this.$refs.treeRef.
-              getHalfCheckedNodes()
+              getHalfCheckedKeys()
         ]
-      // console.log(keys)
+      console.log(keys)
       const idStr = keys.join(',')
       const {data:res} = await this.$http.post(`http://127.0.0.1:8888/api/private/v1/roles/${this.roleId}/rights`,{rids:idStr})
       if(res.meta.status != 200) return this.$message.error('分配权限失败')
