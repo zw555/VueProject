@@ -14,9 +14,7 @@
         </el-col>
         <el-col :span="4">
           <el-button type="primary" @click="addDialogVisible=true">添加用户</el-button>
-
         </el-col>
-
       </el-row>
       <el-table  :data="userList" border stripe>
         <el-table-column type="index" label="#"></el-table-column>

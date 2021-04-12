@@ -402,7 +402,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 .cat_opt{
   margin: 15px 0;
 }
