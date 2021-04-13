@@ -54,7 +54,7 @@
       width="130">
         <template slot-scope="scope">
           <!--              修改按钮-->
-          <el-button size="mini" alt="111" type="primary" icon="el-icon-edit" ></el-button>
+          <el-button size="mini" alt="111" type="primary" icon="el-icon-edit"  ></el-button>
           <!--              删除按钮-->
           <el-button size="mini" type="danger" icon="el-icon-delete" @click="removeUserById(scope.row.goods_id)" ></el-button>
         </template>
@@ -65,7 +65,7 @@
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         :current-page="queryInfo.pagenum"
-        :page-sizes="[5, 10, 15, 20]"
+        :page-sizes="[5, 10, 15]"
         :page-size="queryInfo.pagesize"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total">
