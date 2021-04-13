@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import App from './App.vue'
+
 import VueQuillEditor from 'vue-quill-editor'
 // require styles
 import 'quill/dist/quill.core.css'
@@ -21,6 +22,7 @@ axios.interceptors.request.use(config => {
 
 // 将富文本编辑器注册到全局可用的组件
 Vue.use(VueQuillEditor)
+
 Vue.prototype.$http = axios
 Vue.component('tree-table',TreeTable);
 
